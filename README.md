@@ -13,7 +13,7 @@ bash install.sh
 For a hosted one-command install after this project is pushed to GitHub:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/YOUR_USERNAME/ram-monitor/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/rkaran2558/ram-monitor/main/install.sh | bash
 ```
 
 The installer creates:
