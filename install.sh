@@ -35,6 +35,7 @@ if [ -z "$SOURCE_DIR" ] || [ ! -f "$SOURCE_DIR/ram_monitor.py" ] || [ ! -f "$SOU
     trap 'rm -rf "$SOURCE_DIR"' EXIT
     curl -fsSL "$RAW_BASE_URL/ram_monitor.py" -o "$SOURCE_DIR/ram_monitor.py"
     curl -fsSL "$RAW_BASE_URL/requirements.txt" -o "$SOURCE_DIR/requirements.txt"
+    curl -fsSL "$RAW_BASE_URL/uninstall.sh" -o "$SOURCE_DIR/uninstall.sh"
 fi
 
 echo ""
@@ -46,6 +47,8 @@ echo ""
 mkdir -p "$INSTALL_DIR" "$AUTOSTART_DIR"
 cp "$SOURCE_DIR/ram_monitor.py" "$INSTALL_DIR/ram_monitor.py"
 cp "$SOURCE_DIR/requirements.txt" "$INSTALL_DIR/requirements.txt"
+cp "$SOURCE_DIR/uninstall.sh" "$INSTALL_DIR/uninstall.sh"
+chmod +x "$INSTALL_DIR/uninstall.sh"
 
 python3 -m venv "$INSTALL_DIR/venv"
 "$BIN_DIR/python3" -m pip install --upgrade pip
@@ -90,3 +93,4 @@ echo "$APP_TITLE installed and started."
 echo "Autostart file: $DESKTOP_FILE"
 echo "App files     : $INSTALL_DIR"
 echo "Log file      : /tmp/${APP_NAME}.log"
+echo "Uninstall     : bash $INSTALL_DIR/uninstall.sh"

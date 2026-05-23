@@ -28,6 +28,12 @@ Do not run the installer with `sudo`. Tray icons and notifications need the norm
 ## Uninstall
 
 ```bash
+bash ~/.local/share/ram-monitor/uninstall.sh
+```
+
+If you are working from a cloned copy of this repository, you can also run:
+
+```bash
 bash uninstall.sh
 ```
 
