@@ -40,12 +40,15 @@ bash uninstall.sh
 
 ## Configure
 
-The installer asks for:
+During installation, you can press Enter to use the default values or enter values according to your system and preference.
 
-- Warning threshold percent
-- Critical threshold percent
-- Check interval seconds
-- Alert repeat delay minutes
+| Parameter | Default | Meaning |
+| --- | ---: | --- |
+| `WARNING_THRESHOLD` | `90` | Show a warning alert when RAM usage reaches this percent. |
+| `CRITICAL_THRESHOLD` | `95` | Show a critical alert when RAM usage reaches this percent. This must be higher than `WARNING_THRESHOLD`. |
+| `CHECK_INTERVAL` | `5` | How often the app checks RAM usage, in seconds. |
+| `WARNING_REPEAT_MINUTES` | `5` | How often warning alerts repeat while RAM stays above the warning threshold, in minutes. |
+| `CRITICAL_REPEAT_SECONDS` | `30` | How often critical alerts repeat while RAM stays above the critical threshold, in seconds. |
 
 After install, edit:
 
@@ -73,4 +76,5 @@ The default settings are configured in `ram_monitor.py` and can be overridden by
 - Warning: 90%
 - Critical: 95%
 - Check interval: 5 seconds
-- Alert repeat delay: 5 minutes
+- Warning repeat delay: 5 minutes
+- Critical repeat delay: 30 seconds

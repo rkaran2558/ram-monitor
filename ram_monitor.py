@@ -24,7 +24,8 @@ def load_config(path=CONFIG_FILE):
         "WARNING_THRESHOLD": 90,
         "CRITICAL_THRESHOLD": 95,
         "CHECK_INTERVAL": 5,
-        "SNOOZE_MINUTES": 5,
+        "WARNING_REPEAT_MINUTES": 5,
+        "CRITICAL_REPEAT_SECONDS": 30,
     }
 
     if os.path.exists(path):
@@ -36,6 +37,9 @@ def load_config(path=CONFIG_FILE):
                 key, value = line.split("=", 1)
                 key = key.strip()
                 value = value.strip()
+                if key == "SNOOZE_MINUTES":
+                    key = "WARNING_REPEAT_MINUTES"
+
                 if key in config:
                     try:
                         config[key] = int(value)
@@ -52,14 +56,16 @@ CONFIG = load_config()
 WARNING_THRESHOLD = CONFIG["WARNING_THRESHOLD"]
 CRITICAL_THRESHOLD = CONFIG["CRITICAL_THRESHOLD"]
 CHECK_INTERVAL = CONFIG["CHECK_INTERVAL"]
-SNOOZE_MINUTES = CONFIG["SNOOZE_MINUTES"]
+WARNING_REPEAT_MINUTES = CONFIG["WARNING_REPEAT_MINUTES"]
+CRITICAL_REPEAT_SECONDS = CONFIG["CRITICAL_REPEAT_SECONDS"]
 
 # ─────────────────────────────────────────
 #  GLOBAL STATE
 # ─────────────────────────────────────────
-last_alert_time = 0       # Timestamp of last alert (to avoid spam)
-snooze_until    = 0       # Timestamp until which alerts are snoozed
-icon_ref        = None    # Reference to tray icon (set later)
+last_warning_alert_time = 0
+last_critical_alert_time = 0
+snooze_until = 0
+icon_ref = None
 
 
 # ══════════════════════════════════════════
@@ -213,7 +219,7 @@ def create_tray_icon(percent):
 #  Checks RAM → decides alert level → acts
 # ══════════════════════════════════════════
 def monitor_loop(icon):
-    global last_alert_time, snooze_until
+    global last_warning_alert_time, last_critical_alert_time, snooze_until
 
     while True:
         stats     = get_ram_stats()
@@ -227,10 +233,13 @@ def monitor_loop(icon):
         except Exception:
             pass
 
-        # Only alert if not snoozed and enough time has passed
-        can_alert = (now > snooze_until) and (now - last_alert_time > SNOOZE_MINUTES * 60)
+        alerts_enabled = now > snooze_until
 
-        if percent >= CRITICAL_THRESHOLD and can_alert:
+        if (
+            percent >= CRITICAL_THRESHOLD
+            and alerts_enabled
+            and now - last_critical_alert_time > CRITICAL_REPEAT_SECONDS
+        ):
             # ── CRITICAL ALERT ──
             top_procs = get_top_processes()
             top_names = ", ".join((p['name'] or 'unknown') for p in top_procs[:3])
@@ -241,9 +250,13 @@ def monitor_loop(icon):
             )
             print_alert("CRITICAL", stats, top_procs)
             threading.Thread(target=play_sound, args=(3,), daemon=True).start()
-            last_alert_time = now
+            last_critical_alert_time = now
 
-        elif percent >= WARNING_THRESHOLD and can_alert:
+        elif (
+            percent >= WARNING_THRESHOLD
+            and alerts_enabled
+            and now - last_warning_alert_time > WARNING_REPEAT_MINUTES * 60
+        ):
             # ── WARNING ALERT ──
             top_procs = get_top_processes()
             top_names = ", ".join((p['name'] or 'unknown') for p in top_procs[:3])
@@ -254,7 +267,7 @@ def monitor_loop(icon):
             )
             print_alert("WARNING", stats, top_procs)
             threading.Thread(target=play_sound, args=(1,), daemon=True).start()
-            last_alert_time = now
+            last_warning_alert_time = now
 
         time.sleep(CHECK_INTERVAL)
 
@@ -269,9 +282,9 @@ def show_status(icon, item):
 
 def snooze_alerts(icon, item):
     global snooze_until
-    snooze_until = time.time() + SNOOZE_MINUTES * 60
-    print(f"[RAM Monitor] Alerts snoozed for {SNOOZE_MINUTES} minutes.")
-    send_notification("RAM Monitor", f"Alerts snoozed for {SNOOZE_MINUTES} min.")
+    snooze_until = time.time() + WARNING_REPEAT_MINUTES * 60
+    print(f"[RAM Monitor] Alerts snoozed for {WARNING_REPEAT_MINUTES} minutes.")
+    send_notification("RAM Monitor", f"Alerts snoozed for {WARNING_REPEAT_MINUTES} min.")
 
 def quit_app(icon, item):
     print("[RAM Monitor] Exiting...")
@@ -288,6 +301,8 @@ def main():
     print(f"  Warning at:  {WARNING_THRESHOLD}%")
     print(f"  Critical at: {CRITICAL_THRESHOLD}%")
     print(f"  Checking every {CHECK_INTERVAL} seconds")
+    print(f"  Warning repeat: {WARNING_REPEAT_MINUTES} minutes")
+    print(f"  Critical repeat: {CRITICAL_REPEAT_SECONDS} seconds")
     print("=" * 50)
 
     # Create initial tray icon
@@ -297,7 +312,7 @@ def main():
     # Build tray menu
     menu = pystray.Menu(
         item("📊 Show RAM Status",  show_status),
-        item("😴 Snooze 5 min",     snooze_alerts),
+        item(f"😴 Snooze {WARNING_REPEAT_MINUTES} min", snooze_alerts),
         item("❌ Quit",             quit_app),
     )
 

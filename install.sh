@@ -82,7 +82,8 @@ while [ "$CRITICAL_THRESHOLD" -le "$WARNING_THRESHOLD" ]; do
     CRITICAL_THRESHOLD="$(ask_number "Critical threshold percent" 95 1 100)"
 done
 CHECK_INTERVAL="$(ask_number "Check interval seconds" 5 1 3600)"
-SNOOZE_MINUTES="$(ask_number "Alert repeat delay minutes" 5 1 1440)"
+WARNING_REPEAT_MINUTES="$(ask_number "Warning repeat delay minutes" 5 1 1440)"
+CRITICAL_REPEAT_SECONDS="$(ask_number "Critical repeat delay seconds" 30 5 3600)"
 echo ""
 
 mkdir -p "$INSTALL_DIR" "$AUTOSTART_DIR"
@@ -95,7 +96,8 @@ cat > "$CONFIG_FILE" <<EOF
 WARNING_THRESHOLD=$WARNING_THRESHOLD
 CRITICAL_THRESHOLD=$CRITICAL_THRESHOLD
 CHECK_INTERVAL=$CHECK_INTERVAL
-SNOOZE_MINUTES=$SNOOZE_MINUTES
+WARNING_REPEAT_MINUTES=$WARNING_REPEAT_MINUTES
+CRITICAL_REPEAT_SECONDS=$CRITICAL_REPEAT_SECONDS
 EOF
 
 python3 -m venv "$INSTALL_DIR/venv"
