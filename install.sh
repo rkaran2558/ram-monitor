@@ -7,8 +7,13 @@ INSTALL_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/${APP_NAME}"
 BIN_DIR="$INSTALL_DIR/venv/bin"
 AUTOSTART_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/autostart"
 DESKTOP_FILE="$AUTOSTART_DIR/${APP_NAME}.desktop"
+RAW_BASE_URL="${RAM_MONITOR_RAW_BASE_URL:-https://raw.githubusercontent.com/rkaran2558/ram-monitor/main}"
 
-SOURCE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [ -n "${BASH_SOURCE[0]:-}" ] && [ -f "${BASH_SOURCE[0]}" ]; then
+    SOURCE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+else
+    SOURCE_DIR=""
+fi
 
 if [ "${EUID:-$(id -u)}" -eq 0 ]; then
     echo "Do not run this installer with sudo. Install it as your normal desktop user."
@@ -19,6 +24,18 @@ command -v python3 >/dev/null 2>&1 || {
     echo "python3 is required. Install it with your distro package manager, then run this again."
     exit 1
 }
+
+if [ -z "$SOURCE_DIR" ] || [ ! -f "$SOURCE_DIR/ram_monitor.py" ] || [ ! -f "$SOURCE_DIR/requirements.txt" ]; then
+    command -v curl >/dev/null 2>&1 || {
+        echo "curl is required for hosted install. Install curl, then run this again."
+        exit 1
+    }
+
+    SOURCE_DIR="$(mktemp -d)"
+    trap 'rm -rf "$SOURCE_DIR"' EXIT
+    curl -fsSL "$RAW_BASE_URL/ram_monitor.py" -o "$SOURCE_DIR/ram_monitor.py"
+    curl -fsSL "$RAW_BASE_URL/requirements.txt" -o "$SOURCE_DIR/requirements.txt"
+fi
 
 echo ""
 echo "Installing $APP_TITLE"
