@@ -14,14 +14,45 @@ from pystray import MenuItem as item
 from plyer import notification
 import pygame
 
-# ─────────────────────────────────────────
-#  CONFIGURATION — Change these as needed
-# ─────────────────────────────────────────
-WARNING_THRESHOLD  = 90   # % — Yellow warning
-CRITICAL_THRESHOLD = 95   # % — Red critical alert
-CHECK_INTERVAL     = 5    # seconds between RAM checks
-SOUND_FILE         = os.path.join(os.path.dirname(__file__), "alert.wav")
-SNOOZE_MINUTES     = 5    # How long to wait before re-alerting
+APP_DIR = os.path.dirname(__file__)
+CONFIG_FILE = os.path.join(APP_DIR, "config.env")
+SOUND_FILE = os.path.join(APP_DIR, "alert.wav")
+
+
+def load_config(path=CONFIG_FILE):
+    config = {
+        "WARNING_THRESHOLD": 90,
+        "CRITICAL_THRESHOLD": 95,
+        "CHECK_INTERVAL": 5,
+        "SNOOZE_MINUTES": 5,
+    }
+
+    if os.path.exists(path):
+        with open(path, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line or line.startswith("#") or "=" not in line:
+                    continue
+                key, value = line.split("=", 1)
+                key = key.strip()
+                value = value.strip()
+                if key in config:
+                    try:
+                        config[key] = int(value)
+                    except ValueError:
+                        print(f"[Config] Ignoring invalid value for {key}: {value}")
+
+    if config["CRITICAL_THRESHOLD"] <= config["WARNING_THRESHOLD"]:
+        config["CRITICAL_THRESHOLD"] = min(config["WARNING_THRESHOLD"] + 5, 100)
+
+    return config
+
+
+CONFIG = load_config()
+WARNING_THRESHOLD = CONFIG["WARNING_THRESHOLD"]
+CRITICAL_THRESHOLD = CONFIG["CRITICAL_THRESHOLD"]
+CHECK_INTERVAL = CONFIG["CHECK_INTERVAL"]
+SNOOZE_MINUTES = CONFIG["SNOOZE_MINUTES"]
 
 # ─────────────────────────────────────────
 #  GLOBAL STATE

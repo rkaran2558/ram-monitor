@@ -20,6 +20,7 @@ The installer creates:
 
 - App files in `~/.local/share/ram-monitor`
 - A Python virtual environment in `~/.local/share/ram-monitor/venv`
+- A config file at `~/.local/share/ram-monitor/config.env`
 - An autostart entry at `~/.config/autostart/ram-monitor.desktop`
 - A runtime log at `/tmp/ram-monitor.log`
 
@@ -37,6 +38,28 @@ If you are working from a cloned copy of this repository, you can also run:
 bash uninstall.sh
 ```
 
+## Configure
+
+The installer asks for:
+
+- Warning threshold percent
+- Critical threshold percent
+- Check interval seconds
+- Alert repeat delay minutes
+
+After install, edit:
+
+```bash
+nano ~/.local/share/ram-monitor/config.env
+```
+
+Then restart:
+
+```bash
+pkill -f "/home/$USER/.local/share/ram-monitor/ram_monitor.py"
+nohup ~/.local/share/ram-monitor/venv/bin/python3 ~/.local/share/ram-monitor/ram_monitor.py >/tmp/ram-monitor.log 2>&1 &
+```
+
 ## Development
 
 ```bash
@@ -45,7 +68,7 @@ venv/bin/pip install -r requirements.txt
 venv/bin/python3 ram_monitor.py
 ```
 
-The default thresholds are configured in `ram_monitor.py`:
+The default settings are configured in `ram_monitor.py` and can be overridden by `config.env`:
 
 - Warning: 90%
 - Critical: 95%
